@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Set `publisher: hashstudios.dev` so the package is attributed to the verified publisher.
+- Use absolute GitHub raw URL for the demo GIF so it renders on pub.dev.
+- Update README install instructions to point at the published version.
+
 ## 0.1.0 — Initial release
 
 First public-shaped cut. Extracted from a Flutter wallet app where the morph

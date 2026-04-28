@@ -5,28 +5,17 @@
 A modified `OpenContainer` plus two helper widgets that make tile-to-screen navigation feel premium: a backdrop-blurred underlying screen, a tunable accent scrim, an iOS 26-style 3D tilt mid-flight, and a scaffold-level recede so the host UI feels like it's stepping back as the new screen flies in.
 
 <p align="center">
-  <img src="demo.gif" alt="morph_route demo" width="320" />
+  <img src="https://raw.githubusercontent.com/LiquidatorCoder/morph_route/main/demo.gif" alt="morph_route demo" width="320" />
 </p>
 
 ## Install
 
-While the package isn't on pub.dev yet, depend on it via `path:`:
-
 ```yaml
 dependencies:
-  morph_route:
-    path: ../morph_route
+  morph_route: ^0.1.1
 ```
 
-Or via git once the repo is public:
-
-```yaml
-dependencies:
-  morph_route:
-    git:
-      url: https://github.com/LiquidatorCoder/morph_route
-      ref: main
-```
+Or `flutter pub add morph_route`.
 
 ## 30-second quickstart
 
