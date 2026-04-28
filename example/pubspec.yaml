@@ -1,0 +1,21 @@
+name: morph_route_example
+description: Demo for the morph_route package.
+publish_to: 'none'
+version: 0.0.1+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  morph_route:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
