@@ -4,7 +4,9 @@
 
 A modified `OpenContainer` plus two helper widgets that make tile-to-screen navigation feel premium: a backdrop-blurred underlying screen, a tunable accent scrim, an iOS 26-style 3D tilt mid-flight, and a scaffold-level recede so the host UI feels like it's stepping back as the new screen flies in.
 
-> _Demo GIF — TODO once `example/` ships._
+<p align="center">
+  <img src="demo.gif" alt="morph_route demo" width="320" />
+</p>
 
 ## Install
 
