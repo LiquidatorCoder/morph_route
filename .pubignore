@@ -1,0 +1,12 @@
+demo.mov
+
+example/android/
+example/ios/
+example/macos/
+example/linux/
+example/windows/
+example/web/
+example/build/
+example/.dart_tool/
+example/pubspec.lock
+example/*.iml

@@ -3,7 +3,7 @@ description: >-
   iOS 26-inspired container morph for Flutter. A modified OpenContainer with
   backdrop blur, accent scrim, 3D tilt, and a scaffold-level recede helper —
   drop-in widgets to make any tile-to-screen navigation feel premium.
-version: 0.0.1+1
+version: 0.1.0
 
 homepage: https://github.com/LiquidatorCoder/morph_route
 repository: https://github.com/LiquidatorCoder/morph_route

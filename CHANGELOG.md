@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.1+1 — Initial release
+## 0.1.0 — Initial release
 
 First public-shaped cut. Extracted from a Flutter wallet app where the morph
 shipped on the Send flow.
