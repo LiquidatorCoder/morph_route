@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Restructured README header (centered title, tagline, and pub/platform/license badges).
+- Tightened wording, added subtle section emojis, and split the long lead paragraph into a scannable feature list.
+- Removed the invalid `publisher:` pubspec key (publisher attribution lives in pub.dev's admin UI, not pubspec).
+
 ## 0.1.1
 
 - Set `publisher: hashstudios.dev` so the package is attributed to the verified publisher.

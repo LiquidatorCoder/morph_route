@@ -29,7 +29,7 @@ What you get out of the box:
 
 ```yaml
 dependencies:
-  morph_route: ^0.1.1
+  morph_route: ^0.1.2
 ```
 
 Or `flutter pub add morph_route`.
