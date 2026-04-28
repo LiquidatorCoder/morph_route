@@ -24,7 +24,7 @@ Or via git once the repo is public:
 dependencies:
   morph_route:
     git:
-      url: https://github.com/abhaymaurya/morph_route
+      url: https://github.com/LiquidatorCoder/morph_route
       ref: main
 ```
 
