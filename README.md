@@ -1,14 +1,31 @@
-# morph_route
+<h1 align="center">Morph Route ✨</h1>
 
-**iOS 26-inspired container morph for Flutter.**
+---
 
-A modified `OpenContainer` plus two helper widgets that make tile-to-screen navigation feel premium: a backdrop-blurred underlying screen, a tunable accent scrim, an iOS 26-style 3D tilt mid-flight, and a scaffold-level recede so the host UI feels like it's stepping back as the new screen flies in.
+<p align="center"><strong>iOS 26-inspired container morph for Flutter.</strong></p>
+
+<p align="center">
+  Tap a card, watch it expand into a full screen — and the screen behind it blur, tint, and step back like it's making room. <code>morph_route</code> is a modified <code>OpenContainer</code> plus two helper widgets that wire all of this up for you.
+</p>
+
+<p align="center">
+  <a href="https://pub.dev/packages/morph_route"><img src="https://img.shields.io/pub/v/morph_route.svg?label=pub&color=blue" alt="pub package" /></a>
+  <img src="https://img.shields.io/badge/Platform-Flutter-02569B?logo=flutter&logoColor=white" alt="Platform Flutter" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3-orange.svg" alt="License BSD-3" /></a>
+</p>
+
+What you get out of the box:
+
+- 🌫 **Backdrop blur** on the underlying screen as the morph opens.
+- 🎨 **Accent scrim** — a low-alpha brand color washed over the host UI for warmth.
+- 🎲 **iOS 26-style 3D tilt** that peaks at the morph's midpoint and resolves flat on both ends.
+- 📦 **Scaffold-level recede** so the host UI scales down in lock-step with the morph.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/LiquidatorCoder/morph_route/main/demo.gif" alt="morph_route demo" width="320" />
 </p>
 
-## Install
+## 📦 Install
 
 ```yaml
 dependencies:
@@ -17,7 +34,7 @@ dependencies:
 
 Or `flutter pub add morph_route`.
 
-## 30-second quickstart
+## 🚀 30-second quickstart
 
 ```dart
 import 'package:flutter/material.dart';
@@ -63,17 +80,17 @@ class HomePage extends StatelessWidget {
 }
 ```
 
-## API surface
+## 🧩 API surface
 
-| Widget | What it does |
-|---|---|
-| **`MorphTile`** | A pressable tile that morphs into a destination route. Combines `OpenContainer` with idiomatic press feedback (subtle scale + tinted overlay). 95% of callers want this. |
-| **`MorphRecede`** | Wraps a scaffold body so it scales down (and optionally translates) as a morph route opens, synced to `OpenContainer.activeProgress`. The "stack receding" feel. |
-| **`OpenContainer`** | The morph route itself. Use directly when you need finer control than `MorphTile` gives — programmatic open via a controller pattern, custom press feedback, etc. |
+| Widget              | What it does                                                                                                                                | When to reach for it                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **`MorphTile`**     | A pressable tile that morphs into a destination route. Wraps `OpenContainer` with idiomatic press feedback (subtle scale + tinted overlay). | 95% of callers — start here.                                                                        |
+| **`MorphRecede`**   | Wraps a scaffold body so it scales down (and optionally translates) as a morph route opens, synced to `OpenContainer.activeProgress`.       | The "host UI is stepping back" feel.                                                                |
+| **`OpenContainer`** | The morph route itself.                                                                                                                     | When you need finer control than `MorphTile` gives — programmatic open, custom press feedback, etc. |
 
 Full dartdoc lives next to each class in `lib/src/`.
 
-### Tunable knobs you'll actually reach for
+### 🎛 Tunable knobs you'll actually reach for
 
 On `MorphTile` / `OpenContainer`:
 
@@ -90,12 +107,12 @@ On `MorphRecede`:
 - `curve` — applied to the raw progress before scaling. Default `Curves.ease` (gentle, symmetric on close). Aggressive ease-out feels "snappy" on close.
 - `progress` — override the source notifier. Defaults to `OpenContainer.activeProgress`.
 
-## Caveats
+## ⚠️ Caveats
 
-- **One morph at a time.** `OpenContainer.activeProgress` is a single global `ValueNotifier<double>`. Two morphs running concurrently would clobber each other's published value. This holds for typical UX; if you need multi-morph, you'll need to fork the package or pass an explicit notifier (not currently supported).
-- **`BackdropFilter` cost.** Blur is real GPU work. The package skips the BackdropFilter layer entirely when `blurSigma <= 0.01`, but at non-zero values it does sample-and-blur the underlying tree every frame of the morph.
-- **No reduced-motion handling yet.** `MediaQuery.disableAnimations` is not honored. Planned follow-up.
-- **Tilt and hit-testing.** A tilted card has a tilted hit region; we don't accept input mid-morph anyway, so it's a non-issue in practice.
+- **One morph at a time.** `OpenContainer.activeProgress` is a single global `ValueNotifier<double>`, so two morphs running concurrently would clobber each other's published value. Fine for typical UX. If you need multi-morph, fork the package or pass an explicit notifier (not currently supported).
+- **`BackdropFilter` is real GPU work.** The package skips the `BackdropFilter` layer entirely when `blurSigma <= 0.01`, but at non-zero values it samples and blurs the underlying tree every frame of the morph. Budget accordingly on low-end devices.
+- **Reduced-motion not honored yet.** `MediaQuery.disableAnimations` isn't respected. Planned follow-up.
+- **Tilt and hit-testing.** A tilted card has a tilted hit region. We don't accept input mid-morph anyway, so it's a non-issue in practice.
 
 ## Attribution
 
