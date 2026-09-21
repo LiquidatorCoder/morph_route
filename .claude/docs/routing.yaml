@@ -1,0 +1,97 @@
+# morph_route — verification tier + review routing.
+#
+# Built from what this repo actually contains (a published Flutter package with a demo
+# app, no CI, no tests, no codegen, no native plugin code, no crypto/auth/network
+# surface). Classes that would only make sense in a different kind of repo are absent on
+# purpose — there is no native-build class because this package ships no platform
+# channel code, and no trust-boundary/session-auth class because it has no such code.
+#
+# Read by tool/harness/lib/classify.mjs (tiers) and tool/harness/lib/reviewpolicy.mjs
+# (review mode). Changing this file changes the verification policy fingerprint, which
+# invalidates every existing verify.json — that is intended.
+
+schema_version: 1
+repo: morph_route
+integration_branch: main
+
+tiers:
+  fast:
+    description: Static checks only. Seconds. The default working loop.
+    checks: [format, analyze]
+  normal:
+    description: fast + the test suite and the demo app's own analysis.
+    checks: [format, analyze, test, example_analyze]
+  full:
+    description: normal + the pub.dev release gate.
+    checks: [format, analyze, test, example_analyze, publish_dry_run]
+
+# First match wins, top to bottom. Paths are repo-relative, glob-matched.
+classification:
+  - match: "pubspec.yaml"
+    tier: full
+    why: SDK constraints, dependencies and the published version all live here.
+  - match: "CHANGELOG.md"
+    tier: full
+    why: Part of the pub.dev release artifact; changed together with the version.
+  - match: "lib/morph_route.dart"
+    tier: full
+    why: The public export barrel — this file IS the package's API surface.
+  - match: "lib/**"
+    tier: normal
+    why: Package implementation. Consumed by real apps; not release-path by itself.
+  - match: "analysis_options.yaml"
+    tier: normal
+    why: Lint config change re-scopes every analyze run in the repo.
+  - match: "tool/harness/**"
+    tier: normal
+    why: Verifier/gate logic. Also a policy file (see policy_files below).
+  - match: ".claude/docs/routing.yaml"
+    tier: normal
+    why: This file. Policy change.
+  - match: "AGENTS.md"
+    tier: normal
+    why: The rules agents work from.
+  - match: "example/**"
+    tier: fast
+    why: Demo app. Not published (publish_to:none) and not depended on by lib/.
+  - match: "README.md"
+    tier: fast
+  - match: "docs/**"
+    tier: fast
+  - match: ".claude/tasks/**"
+    tier: fast
+    why: Task bookkeeping — excluded from fingerprints entirely.
+  - match: "*"
+    tier: fast
+    why: Default floor. Nothing in this repo is verification-exempt.
+
+# Independent review is required only where a mistake escapes this repository.
+# For a pub.dev package that means exactly one thing: publishing.
+review:
+  default_mode: none
+  rules:
+    - match: "pubspec.yaml"
+      mode: standard
+      why: Version, SDK constraints and publish metadata — the release path.
+    - match: "lib/morph_route.dart"
+      mode: standard
+      why: A changed export is a breaking change for every downstream consumer.
+    - match: "LICENSE"
+      mode: standard
+      why: Distribution terms of a published artifact.
+
+# Files whose content defines "what verification means" here. Hashed into every
+# verify.json's verification_policy_fingerprint.
+policy_files:
+  - tool/harness/verify
+  - tool/harness/lib/classify.mjs
+  - tool/harness/lib/reviewpolicy.mjs
+  - .claude/docs/routing.yaml
+  - analysis_options.yaml
+
+# Shared resources a worker may need to serialize on. This repo has no codegen step
+# (no build_runner) and no simulator pool, so neither appears here.
+lock_resources:
+  - dependency-resolution   # flutter pub get / upgrade
+  - repo-format             # dart format . (rewrites files repo-wide)
+  - release                 # flutter pub publish
