@@ -1,17 +1,27 @@
-# morph_route_example
+# morph_route example
 
-A new Flutter project.
+Four tiles, each showing a different side of the package:
 
-## Getting Started
+| Tile | Widget | What it shows |
+|---|---|---|
+| **Send** | `MorphTile` | the signature look — fade, backdrop blur, accent scrim, 3D tilt, press tint + haptic |
+| **Receive** | `MorphTile` | `ContainerTransitionType.fadeThrough` from a coloured tile, flat (no tilt) |
+| **Swap** | `OpenContainer` | used directly; **Confirm swap** closes with `returnValue`, delivered to `onClosed` |
+| **Borrow** | `MorphTile` | a regular `MaterialPageRoute` pushed on top of the morph route, then popped |
 
-This project is a starting point for a Flutter application.
+The whole home screen is wrapped in `MorphRecede`, so it scales back while a route is open.
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter run
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## End-to-end tests
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+`integration_test/morph_e2e_test.dart` drives every tile on a real device or simulator:
+open/close latency and frame timings, return values, push-on-top, double tap, close
+mid-open, rotate-while-open landing, the largest accessibility text size, and Reduce
+Motion. Each animated scenario prints a `PERF {json}` line.
+
+```bash
+flutter test integration_test -d <device-id>
+```

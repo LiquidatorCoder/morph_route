@@ -23,7 +23,8 @@ version/metadata are therefore a release path, not ordinary source — see
 ## Commands (the real ones)
 
 CI is `.github/workflows/ci.yml` (format, analyze, example analyze, test, publish
-dry-run on every PR and on `main`). There is no Makefile and no script runner. These are
+dry-run on every PR and on `main`, plus the example's integration tests on an iOS
+simulator). There is no Makefile and no script runner. These are
 the actual toolchain commands, confirmed to run here:
 
 | Purpose | Command |
@@ -33,6 +34,7 @@ the actual toolchain commands, confirmed to run here:
 | Format (write) | `dart format .` (120 columns, set by `formatter.page_width` in both `analysis_options.yaml` files) |
 | Tests | `flutter test` |
 | Demo app analysis | `flutter analyze` from `example/` |
+| Device e2e (iOS sim) | `flutter test integration_test -d <udid>` from `example/` (also the `ios-e2e` CI job) |
 | Release dry-run | `flutter pub publish --dry-run` |
 | Dependencies | `flutter pub get` |
 
