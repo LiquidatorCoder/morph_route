@@ -10,6 +10,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'morph_recede_marker.dart';
 import 'open_container.dart';
 
 /// Scales [child] down (and optionally translates) as a morph route opens,
@@ -76,9 +77,13 @@ class MorphRecede extends StatelessWidget {
         if (translateOffset != Offset.zero) {
           result = Transform.translate(offset: translateOffset * t, child: result);
         }
-        return result;
+        // The outer marker pairs with the inner one below so [OpenContainer]
+        // can measure its tile without this widget's transforms.
+        return MorphRecedeMarker(isInner: false, child: result);
       },
-      child: child,
+      // Built once: the transformed body re-composites instead of repainting
+      // each frame.
+      child: MorphRecedeMarker(isInner: true, child: RepaintBoundary(child: child)),
     );
   }
 }

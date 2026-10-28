@@ -29,14 +29,21 @@
 //      3D tilt on the morphing card via `Matrix4.setEntry(3, 2, ...)` +
 //      rotateY/rotateX, driven by `sin(π·t)` so the tilt peaks at midpoint
 //      and is 0 at both endpoints (closed tile and full-screen).
-//   7. `_takeMeasurements` no longer re-reads the source rect on pop (the
-//      `remeasureSource: false` path). Upstream re-measures via
-//      `getTransformTo(navigator)`, which walks through every transform in
-//      the underlying screen — including the home shell's recede scale —
-//      and lands the close at a transformed (wrong) rect. The push-time
-//      measurement is reused. The placeholder *is* still re-established so
+//   7. The source rect is re-measured on pop (so a rotation, keyboard or list
+//      scroll while open still lands the close on the real tile), but through
+//      `morphTransformTo` instead of `getTransformTo(navigator)`. It skips
+//      the transforms of any `MorphRecede` between the tile and the navigator
+//      (marked by an internal render-object pair) — the recede scale would
+//      otherwise land the close at a transformed (wrong) rect — and still
+//      honours every other ancestor transform, like upstream. The placeholder
+//      is re-established at the tile's untransformed layout size so
 //      `_HideableState.isInTree` flips back to false and `buildPage` renders
 //      the closed copy during the close morph.
+//   8. Per-route caching: the `CurvedAnimation` (recreated only when the
+//      interrupted flag flips, disposed with the route), the fade
+//      `Animation`s and the open/closed `Builder` widgets are built once, so
+//      the morph no longer allocates listeners or rebuilds both screens every
+//      frame. The closed copy fading out inside the route ignores pointers.
 // ----------------------------------------------------------------------------
 
 import 'dart:math' as math;
@@ -44,6 +51,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
+import 'morph_recede_marker.dart';
 
 /// Signature for `action` callback function provided to [OpenContainer.openBuilder].
 typedef CloseContainerActionCallback<S> = void Function({S? returnValue});
@@ -421,6 +430,49 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
   // Position and size of the closed container within the enclosing Navigator.
   final RectTween _rectTween = RectTween();
 
+  // Layout size of the closed container, ignoring ancestor transforms.
+  Size? _sourceSize;
+
+  // Built once per route so Flutter can skip rebuilding the screens each frame.
+  late final Widget _openChild = Builder(
+    key: _openBuilderKey,
+    builder: (BuildContext context) {
+      return openBuilder(context, closeContainer);
+    },
+  );
+
+  late final Widget _closedChild = Builder(
+    key: closedBuilderKey,
+    builder: (BuildContext context) {
+      // Pass a no-op for the open callback while we're already in the process
+      // of opening.
+      return closedBuilder(context, () {});
+    },
+  );
+
+  CurvedAnimation? _curvedAnimation;
+  bool? _curvedForInterrupted;
+  final Map<Animatable<double>, Animation<double>> _fadeAnimations =
+      Map<Animatable<double>, Animation<double>>.identity();
+
+  CurvedAnimation _curvedFor(Animation<double> parent) {
+    final bool interrupted = _transitionWasInterrupted;
+    if (_curvedAnimation == null || _curvedForInterrupted != interrupted) {
+      _curvedAnimation?.dispose();
+      _curvedForInterrupted = interrupted;
+      _curvedAnimation = CurvedAnimation(
+        parent: parent,
+        curve: Curves.fastOutSlowIn,
+        reverseCurve: interrupted ? null : Curves.fastOutSlowIn.flipped,
+      );
+    }
+    return _curvedAnimation!;
+  }
+
+  Animation<double> _fadeFor(Animatable<double> tween, Animation<double> parent) {
+    return _fadeAnimations.putIfAbsent(tween, () => tween.animate(parent));
+  }
+
   static Animatable<List<BoxShadow>?> _getShadowsTween(List<BoxShadow>? begin, List<BoxShadow>? end) {
     if (begin == null && end == null) {
       return ConstantTween<List<BoxShadow>?>(null);
@@ -460,20 +512,19 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
 
   @override
   bool didPop(T? result) {
-    // Re-measure the navigator (in case its size changed mid-route — e.g. an
-    // orientation change), but DO NOT re-measure the source rect. The source
-    // rect captured on push is correct; re-reading it now would walk through
-    // any transforms applied to the underlying screen since push (e.g. the
-    // home shell's `Transform.scale` recede driven by `activeProgress`),
-    // landing the close at the *transformed* rect and then snapping when the
-    // placeholder is removed.
-    _takeMeasurements(navigatorContext: subtreeContext!, delayForSourceRoute: true, remeasureSource: false);
+    // Re-measure both the navigator and the source rect: either may have moved
+    // while the route was open (rotation, keyboard, list scroll). The source
+    // rect is read through `morphTransformTo`, so a `MorphRecede` scale on the
+    // underlying screen does not skew the close target.
+    _takeMeasurements(navigatorContext: subtreeContext!, delayForSourceRoute: true);
     return super.didPop(result);
   }
 
   @override
   void dispose() {
     animation?.removeListener(_publishProgress);
+    _curvedAnimation?.dispose();
+    _curvedAnimation = null;
     OpenContainer.activeProgress.value = 0.0;
     if (hideableKey.currentState?.isVisible == false) {
       // Route may be disposed without dismissing its animation if it's
@@ -491,11 +542,7 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
     }
   }
 
-  void _takeMeasurements({
-    required BuildContext navigatorContext,
-    bool delayForSourceRoute = false,
-    bool remeasureSource = true,
-  }) {
+  void _takeMeasurements({required BuildContext navigatorContext, bool delayForSourceRoute = false}) {
     final navigator =
         Navigator.of(navigatorContext, rootNavigator: useRootNavigator).context.findRenderObject()! as RenderBox;
     final Size navSize = _getSize(navigator);
@@ -503,9 +550,8 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
 
     void takeMeasurementsInSourceRoute([Duration? _]) {
       if (!navigator.attached || hideableKey.currentContext == null) return;
-      if (remeasureSource) {
-        _rectTween.begin = _getRect(hideableKey, navigator);
-      }
+      _rectTween.begin = _getRect(hideableKey, navigator);
+      _sourceSize = (hideableKey.currentContext!.findRenderObject()! as RenderBox).size;
       // Always re-establish the placeholder so the source widget is replaced
       // by a SizedBox while the route owns the visual. This is what makes
       // `_HideableState.isInTree` return false, which is the gate buildPage
@@ -513,8 +559,8 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
       // (When the route is fully open, the status listener sets
       // `placeholderSize = null` so the underlying `Visibility` takes over;
       // re-setting it on pop re-arms the closed copy for the close morph.)
-      if (_rectTween.begin != null) {
-        hideableKey.currentState!.placeholderSize = _rectTween.begin!.size;
+      if (_sourceSize != null) {
+        hideableKey.currentState!.placeholderSize = _sourceSize;
       }
     }
 
@@ -535,7 +581,7 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
     assert(ancestor.hasSize);
     final render = key.currentContext!.findRenderObject()! as RenderBox;
     assert(render.hasSize);
-    return MatrixUtils.transformRect(render.getTransformTo(ancestor), Offset.zero & render.size);
+    return MatrixUtils.transformRect(morphTransformTo(render, ancestor), Offset.zero & render.size);
   }
 
   bool get _transitionWasInterrupted {
@@ -591,21 +637,12 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
                   child: Container(
                     clipBehavior: Clip.antiAlias,
                     decoration: ShapeDecoration(color: openColor, shape: openShape, shadows: openShadows),
-                    child: Builder(
-                      key: _openBuilderKey,
-                      builder: (BuildContext context) {
-                        return openBuilder(context, closeContainer);
-                      },
-                    ),
+                    child: _openChild,
                   ),
                 );
               }
 
-              final Animation<double> curvedAnimation = CurvedAnimation(
-                parent: animation,
-                curve: Curves.fastOutSlowIn,
-                reverseCurve: _transitionWasInterrupted ? null : Curves.fastOutSlowIn.flipped,
-              );
+              final Animation<double> curvedAnimation = _curvedFor(animation);
               TweenSequence<Color?>? colorTween;
               TweenSequence<double>? closedOpacityTween, openOpacityTween;
               switch (animation.status) {
@@ -654,15 +691,10 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
                         height: _rectTween.begin!.height,
                         child: (hideableKey.currentState?.isInTree ?? false)
                             ? null
-                            : FadeTransition(
-                                opacity: closedOpacityTween!.animate(animation),
-                                child: Builder(
-                                  key: closedBuilderKey,
-                                  builder: (BuildContext context) {
-                                    // Pass a no-op for the open callback while we're
-                                    // already in the process of opening.
-                                    return closedBuilder(context, () {});
-                                  },
+                            : IgnorePointer(
+                                child: FadeTransition(
+                                  opacity: _fadeFor(closedOpacityTween!, animation),
+                                  child: _closedChild,
                                 ),
                               ),
                       ),
@@ -675,15 +707,7 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
                       child: SizedBox(
                         width: _rectTween.end!.width,
                         height: _rectTween.end!.height,
-                        child: FadeTransition(
-                          opacity: openOpacityTween!.animate(animation),
-                          child: Builder(
-                            key: _openBuilderKey,
-                            builder: (BuildContext context) {
-                              return openBuilder(context, closeContainer);
-                            },
-                          ),
-                        ),
+                        child: FadeTransition(opacity: _fadeFor(openOpacityTween!, animation), child: _openChild),
                       ),
                     ),
                   ],
