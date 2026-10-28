@@ -5,6 +5,11 @@
 - Package archive shrinks from ~2 MB to ~18 KB: `demo.gif`/`demo.mov` (the README
   already embeds the GIF by URL) and repo tooling (`AGENTS.md`, `CLAUDE.md`, `docs/`,
   `tool/`, `.github/`) no longer ship to pub.dev.
+- `MorphTile`: the press scale now applies to the whole card (background, shape,
+  shadow) instead of shrinking the content inside a full-size card.
+- `MorphTile`: releasing a press no longer flashes grey — the tint fades by alpha
+  instead of lerping toward transparent black.
+- `MorphTile`: exposed to VoiceOver/TalkBack as a button.
 - Source formatted at 120 columns (`formatter.page_width`), enforced in CI.
 
 ## 0.1.2
