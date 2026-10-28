@@ -134,7 +134,7 @@ class _MorphTileState<T extends Object?> extends State<MorphTile<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return OpenContainer<T>(
+    Widget tile = OpenContainer<T>(
       tappable: false, // we handle tap to drive press state
       closedColor: widget.closedColor,
       openColor: widget.openColor,
@@ -165,34 +165,40 @@ class _MorphTileState<T extends Object?> extends State<MorphTile<T>> {
           closed = AnimatedContainer(
             duration: widget.pressedAnimDuration,
             curve: Curves.easeOutCubic,
-            color: _down ? widget.pressedOverlayColor : Colors.transparent,
+            // Fade by alpha only: lerping to `Colors.transparent` (black) would pass through grey.
+            color: _down ? widget.pressedOverlayColor : widget.pressedOverlayColor!.withValues(alpha: 0),
             child: closed,
           );
         }
 
-        // Scale-on-press. Skipped when scale == 1.0 to avoid an extra Transform.
-        if (widget.pressedScale != 1.0) {
-          closed = AnimatedScale(
-            scale: _down ? widget.pressedScale : 1.0,
-            duration: widget.pressedAnimDuration,
-            curve: Curves.easeOutCubic,
+        return Semantics(
+          button: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (_) => setState(() => _down = true),
+            onTapCancel: () => setState(() => _down = false),
+            onTapUp: (_) => setState(() => _down = false),
+            onTap: () {
+              widget.onTap?.call();
+              openContainer();
+            },
             child: closed,
-          );
-        }
-
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (_) => setState(() => _down = true),
-          onTapCancel: () => setState(() => _down = false),
-          onTapUp: (_) => setState(() => _down = false),
-          onTap: () {
-            widget.onTap?.call();
-            openContainer();
-          },
-          child: closed,
+          ),
         );
       },
       openBuilder: widget.openBuilder,
     );
+
+    // Scale-on-press wraps the whole container (background, shape, shadow, content) so the card scales as one, and
+    // stays out of the closed copy rendered inside the route. Skipped when scale == 1.0 to avoid an extra Transform.
+    if (widget.pressedScale != 1.0) {
+      tile = AnimatedScale(
+        scale: _down ? widget.pressedScale : 1.0,
+        duration: widget.pressedAnimDuration,
+        curve: Curves.easeOutCubic,
+        child: tile,
+      );
+    }
+    return tile;
   }
 }
