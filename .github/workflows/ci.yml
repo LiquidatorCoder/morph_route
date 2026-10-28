@@ -61,6 +61,8 @@ jobs:
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
       - name: Integration tests (prints PERF lines)
         working-directory: example
+        # Explicit `shell: bash` adds -o pipefail, so a failing test isn't masked by `tee`.
+        shell: bash
         run: flutter test integration_test -d "$SIM_UDID" | tee e2e.log
       - name: Perf summary
         if: always()
