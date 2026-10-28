@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 
 import 'open_container.dart';
+import 'reduce_motion.dart';
 
 /// A pressable tile that morphs into a destination route via [OpenContainer].
 ///
@@ -18,6 +19,11 @@ import 'open_container.dart';
 /// On tap, the tile expands into a full-screen route built by [openBuilder].
 ///
 /// All [OpenContainer] visual parameters are exposed as pass-throughs.
+///
+/// When Reduce Motion is on (iOS: `AccessibilityFeatures.reduceMotion`; Android
+/// "Remove animations": `MediaQuery.disableAnimations`), the press scale
+/// is disabled (the tint overlay stays) and [OpenContainer]'s cross-fade
+/// replaces the morph.
 ///
 /// ### Example
 ///
@@ -191,9 +197,11 @@ class _MorphTileState<T extends Object?> extends State<MorphTile<T>> {
 
     // Scale-on-press wraps the whole container (background, shape, shadow, content) so the card scales as one, and
     // stays out of the closed copy rendered inside the route. Skipped when scale == 1.0 to avoid an extra Transform.
+    // Under Reduce Motion the target stays 1.0 (the wrapper remains so the tree shape, and State, survive a toggle).
+    final bool reduceMotion = reduceMotionOf(context);
     if (widget.pressedScale != 1.0) {
       tile = AnimatedScale(
-        scale: _down ? widget.pressedScale : 1.0,
+        scale: _down && !reduceMotion ? widget.pressedScale : 1.0,
         duration: widget.pressedAnimDuration,
         curve: Curves.easeOutCubic,
         child: tile,

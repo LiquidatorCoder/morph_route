@@ -21,6 +21,10 @@
   its untransformed size while the route is open.
 - `MorphRecede`: the receding body is a repaint boundary, so it re-composites instead
   of repainting each frame.
+- Respect Reduce Motion: on iOS (`AccessibilityFeatures.reduceMotion`) and Android
+  "Remove animations" (`MediaQuery.disableAnimations`), `OpenContainer`/`MorphTile`
+  cross-fade instead of morphing, and 3D tilt, `MorphRecede` scale and the press scale
+  are off. Scrim, blur, tint and durations are unchanged. No API change.
 - Source formatted at 120 columns (`formatter.page_width`), enforced in CI.
 
 ## 0.1.2

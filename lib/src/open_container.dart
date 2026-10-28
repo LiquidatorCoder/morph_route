@@ -44,6 +44,11 @@
 //      `Animation`s and the open/closed `Builder` widgets are built once, so
 //      the morph no longer allocates listeners or rebuilds both screens every
 //      frame. The closed copy fading out inside the route ignores pointers.
+//   9. Honours Reduce Motion (iOS: `AccessibilityFeatures.reduceMotion`; Android
+//      "Remove animations": `MediaQuery.disableAnimations`), read when the
+//      route is pushed and popped: the rect morph and the 3D tilt are replaced
+//      by a full-screen cross-fade of the open content over the (static)
+//      closed copy. Scrim, blur, durations and `activeProgress` are unchanged.
 // ----------------------------------------------------------------------------
 
 import 'dart:math' as math;
@@ -53,6 +58,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'morph_recede_marker.dart';
+import 'reduce_motion.dart';
 
 /// Signature for `action` callback function provided to [OpenContainer.openBuilder].
 typedef CloseContainerActionCallback<S> = void Function({S? returnValue});
@@ -79,6 +85,12 @@ enum ContainerTransitionType {
 typedef ClosedCallback<S> = void Function(S data);
 
 /// A container that grows to fill the screen to reveal new content when tapped.
+///
+/// When Reduce Motion is on (iOS: `AccessibilityFeatures.reduceMotion`; Android
+/// "Remove animations": `MediaQuery.disableAnimations`), the morph and the
+/// 3D tilt are replaced by a full-screen cross-fade of the open content over
+/// the closed tile; scrim, blur, durations and [activeProgress] are unchanged.
+/// The setting is read when the route is pushed and popped.
 @optionalTypeArgs
 class OpenContainer<T extends Object?> extends StatefulWidget {
   const OpenContainer({
@@ -433,6 +445,10 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
   // Layout size of the closed container, ignoring ancestor transforms.
   Size? _sourceSize;
 
+  // Reduce Motion, captured at push and pop so a mid-session toggle applies to
+  // the next transition rather than flipping layout mid-flight.
+  bool _reduceMotion = false;
+
   // Built once per route so Flutter can skip rebuilding the screens each frame.
   late final Widget _openChild = Builder(
     key: _openBuilderKey,
@@ -490,6 +506,7 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
 
   @override
   TickerFuture didPush() {
+    _reduceMotion = reduceMotionOf(hideableKey.currentContext!);
     _takeMeasurements(navigatorContext: hideableKey.currentContext!);
 
     animation!.addListener(_publishProgress);
@@ -512,6 +529,7 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
 
   @override
   bool didPop(T? result) {
+    _reduceMotion = reduceMotionOf(subtreeContext!);
     // Re-measure both the navigator and the source rect: either may have moved
     // while the route was open (rotation, keyboard, list scroll). The source
     // rect is read through `morphTransformTo`, so a `MorphRecede` scale on the
@@ -668,6 +686,10 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
               assert(closedOpacityTween != null);
               assert(openOpacityTween != null);
 
+              if (_reduceMotion) {
+                return _buildReducedMotion(curvedAnimation, animation, closedOpacityTween!);
+              }
+
               final Rect rect = _rectTween.evaluate(curvedAnimation)!;
               final ShapeBorder shape = _shapeTween.evaluate(curvedAnimation)!;
               final List<BoxShadow>? currentShadows = _shadowsTween.evaluate(curvedAnimation);
@@ -714,13 +736,6 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
                 ),
               );
 
-              final Color scrim = _scrimTween.evaluate(curvedAnimation) ?? Colors.transparent;
-              final double blurSigma = _blurTween.evaluate(curvedAnimation);
-              // BackdropFilter has a real cost; only insert it once the blur
-              // is actually visible (skip it at the very start/end of the
-              // animation when sigma rounds to ~0).
-              final bool hasBlur = blurSigma > 0.01;
-
               // 3D tilt — peaks at midpoint of the morph (sin(π·t) is 0 at
               // both endpoints, 1 at 0.5). Applied symmetrically on open and
               // close. Only constructed when peak rotation is non-zero so the
@@ -732,19 +747,7 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: <Widget>[
-                    // Blurred + tinted layer behind the morph card. The
-                    // BackdropFilter samples the underlying screen; the
-                    // ColoredBox child paints the scrim on top of the blur.
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: hasBlur
-                            ? BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-                                child: ColoredBox(color: scrim),
-                              )
-                            : ColoredBox(color: scrim),
-                      ),
-                    ),
+                    _buildScrim(curvedAnimation),
                     // Morph card.
                     Align(
                       alignment: Alignment.topLeft,
@@ -768,6 +771,80 @@ class _OpenContainerRoute<T> extends ModalRoute<T> {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  // Blurred + tinted layer behind the morph card. The BackdropFilter samples
+  // the underlying screen; the ColoredBox child paints the scrim on top of the
+  // blur.
+  Widget _buildScrim(Animation<double> curvedAnimation) {
+    final Color scrim = _scrimTween.evaluate(curvedAnimation) ?? Colors.transparent;
+    final double blurSigma = _blurTween.evaluate(curvedAnimation);
+    // BackdropFilter has a real cost; only insert it once the blur is actually
+    // visible (skip it at the very start/end of the animation when sigma
+    // rounds to ~0).
+    final bool hasBlur = blurSigma > 0.01;
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: hasBlur
+            ? BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+                child: ColoredBox(color: scrim),
+              )
+            : ColoredBox(color: scrim),
+      ),
+    );
+  }
+
+  // Reduce Motion: no rect morph and no tilt. The closed copy stays put at the
+  // source rect while the open content fades in full-screen over it (and out on
+  // close), like iOS's reduced-motion app open.
+  Widget _buildReducedMotion(
+    Animation<double> curvedAnimation,
+    Animation<double> animation,
+    Animatable<double> closedOpacityTween,
+  ) {
+    final Rect source = _rectTween.begin!;
+    return SizedBox.expand(
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          _buildScrim(curvedAnimation),
+          if (!(hideableKey.currentState?.isInTree ?? false))
+            Align(
+              alignment: Alignment.topLeft,
+              child: Transform.translate(
+                offset: source.topLeft,
+                child: SizedBox(
+                  width: source.width,
+                  height: source.height,
+                  child: IgnorePointer(
+                    child: FadeTransition(
+                      opacity: _fadeFor(closedOpacityTween, animation),
+                      child: Container(
+                        clipBehavior: Clip.antiAlias,
+                        decoration: ShapeDecoration(
+                          color: closedColor,
+                          shape: _shapeTween.begin!,
+                          shadows: _shadowsTween.transform(0),
+                        ),
+                        child: _closedChild,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          FadeTransition(
+            opacity: curvedAnimation,
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: ShapeDecoration(color: openColor, shape: openShape, shadows: openShadows),
+              child: SizedBox(width: _rectTween.end!.width, height: _rectTween.end!.height, child: _openChild),
+            ),
+          ),
+        ],
       ),
     );
   }
