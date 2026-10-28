@@ -107,11 +107,14 @@ On `MorphRecede`:
 - `curve` — applied to the raw progress before scaling. Default `Curves.ease` (gentle, symmetric on close). Aggressive ease-out feels "snappy" on close.
 - `progress` — override the source notifier. Defaults to `OpenContainer.activeProgress`.
 
+## Accessibility
+
+`morph_route` respects Reduce Motion (iOS: `AccessibilityFeatures.reduceMotion`, from Settings → Accessibility → Motion; Android "Remove animations": `MediaQuery.disableAnimations`). When it is on, `OpenContainer` / `MorphTile` swap the morph for a cross-fade, and 3D tilt, `MorphRecede` scale and the `MorphTile` press scale are disabled. The scrim, blur and press tint are kept. The setting is read when a route is pushed or popped.
+
 ## ⚠️ Caveats
 
 - **One morph at a time.** `OpenContainer.activeProgress` is a single global `ValueNotifier<double>`, so two morphs running concurrently would clobber each other's published value. Fine for typical UX. If you need multi-morph, fork the package or pass an explicit notifier (not currently supported).
 - **`BackdropFilter` is real GPU work.** The package skips the `BackdropFilter` layer entirely when `blurSigma <= 0.01`, but at non-zero values it samples and blurs the underlying tree every frame of the morph. Budget accordingly on low-end devices.
-- **Reduced-motion not honored yet.** `MediaQuery.disableAnimations` isn't respected. Planned follow-up.
 - **Tilt and hit-testing.** A tilted card has a tilted hit region. We don't accept input mid-morph anyway, so it's a non-issue in practice.
 
 ## Attribution

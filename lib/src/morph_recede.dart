@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 
 import 'morph_recede_marker.dart';
 import 'open_container.dart';
+import 'reduce_motion.dart';
 
 /// Scales [child] down (and optionally translates) as a morph route opens,
 /// driven by a [Listenable<double>] (defaults to [OpenContainer.activeProgress]).
@@ -29,6 +30,10 @@ import 'open_container.dart';
 /// At rest (progress = 0): identity transform.
 /// At full open (progress = 1): `child` is scaled to [scaleFloor] from
 /// [alignment], optionally translated by [translateOffset].
+///
+/// When Reduce Motion is on (iOS: `AccessibilityFeatures.reduceMotion`; Android
+/// "Remove animations": `MediaQuery.disableAnimations`), no scale or
+/// translation is applied: the child stays at identity at every progress.
 class MorphRecede extends StatelessWidget {
   const MorphRecede({
     super.key,
@@ -71,7 +76,9 @@ class MorphRecede extends StatelessWidget {
     return ValueListenableBuilder<double>(
       valueListenable: source,
       builder: (context, raw, child) {
-        final t = curve.transform(raw.clamp(0.0, 1.0));
+        // Read per tick: the iOS flag is not a MediaQuery field, so it never triggers a rebuild.
+        final reduceMotion = reduceMotionOf(context);
+        final t = reduceMotion ? 0.0 : curve.transform(raw.clamp(0.0, 1.0));
         final scale = 1.0 - (1.0 - scaleFloor) * t;
         Widget result = Transform.scale(scale: scale, alignment: alignment, child: child);
         if (translateOffset != Offset.zero) {
