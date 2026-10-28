@@ -10,6 +10,17 @@
 - `MorphTile`: releasing a press no longer flashes grey — the tint fades by alpha
   instead of lerping toward transparent black.
 - `MorphTile`: exposed to VoiceOver/TalkBack as a button.
+- `OpenContainer`: the close morph now re-measures the tile on pop, so it lands on
+  the tile's real position after a rotation, keyboard or list scroll while open
+  (previously it aimed at the push-time rect and snapped up to ~150 pt at the end).
+  `MorphRecede`'s own scale is still excluded from the measurement.
+- `OpenContainer`: no longer allocates a `CurvedAnimation` (plus a status listener)
+  every frame of the morph, and no longer rebuilds the open and closed screens every
+  frame — ~2× less UI-thread build time per frame on device.
+- `OpenContainer`: the fading closed copy ignores taps mid-morph; the tile's slot keeps
+  its untransformed size while the route is open.
+- `MorphRecede`: the receding body is a repaint boundary, so it re-composites instead
+  of repainting each frame.
 - Source formatted at 120 columns (`formatter.page_width`), enforced in CI.
 
 ## 0.1.2
