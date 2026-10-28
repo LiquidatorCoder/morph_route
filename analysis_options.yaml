@@ -1,5 +1,11 @@
+analyzer:
+  exclude:
+    - build/**
 include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
     # Project-specific rule overrides go here. Inherits flutter_lints by default.
+
+formatter:
+  page_width: 120

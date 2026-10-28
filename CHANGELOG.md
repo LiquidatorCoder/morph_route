@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Package archive shrinks from ~2 MB to ~18 KB: `demo.gif`/`demo.mov` (the README
+  already embeds the GIF by URL) and repo tooling (`AGENTS.md`, `CLAUDE.md`, `docs/`,
+  `tool/`, `.github/`) no longer ship to pub.dev.
+- Source formatted at 120 columns (`formatter.page_width`), enforced in CI.
+
 ## 0.1.2
 
 - Restructured README header (centered title, tagline, and pub/platform/license badges).

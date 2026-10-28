@@ -4,8 +4,8 @@
 repo's changes pass. An agent's judgement is not verification; the exit code and the
 `verify.json` it writes are.
 
-The checks below are this repository's actual commands (there is no CI workflow and no
-Makefile here to inherit them from) — see `AGENTS.md` for where each one came from.
+The checks below are this repository's actual commands — the same ones
+`.github/workflows/ci.yml` runs on every PR. See `AGENTS.md` for where each one came from.
 
 ## Tiers
 
@@ -31,14 +31,11 @@ Declaring `fast` on a change to `pubspec.yaml` does not make it a fast change.
 
 Recorded here because a check that is green for the wrong reason is worse than a red one:
 
-- **`format` currently fails.** `lib/src/open_container.dart` and
-  `example/lib/main.dart` are not `dart format`-clean. This is pre-existing repository
-  state and was deliberately left untouched by the harness bootstrap. `dart format .`
-  fixes it; that is the repo owner's call, not the harness's.
-- **`test` has nothing to run.** There is no top-level `test/` directory and
-  `example/test/` is empty. The verifier reports `test` as **`skipped`** with a reason
-  and lists it in `unsatisfied_required` — so `normal` and `full` come back
-  `incomplete`, never `passed`. A required check that could not run is never success.
+- **`format` is clean** at 120 columns (`formatter.page_width` in `analysis_options.yaml`
+  and `example/analysis_options.yaml`), matching how the source was written.
+- **`test`** runs the widget tests under `test/` (mirroring `lib/src/`). If that
+  directory were ever empty the verifier would report `test` as **`skipped`** and
+  `normal`/`full` as `incomplete` — a required check that could not run is never success.
 
 ## Result semantics
 

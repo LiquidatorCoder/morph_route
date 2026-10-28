@@ -1,5 +1,24 @@
+# pub uses this file instead of .gitignore, so it repeats the build outputs
+# and adds repo-only files that must not ship in the pub.dev archive.
+# README embeds the GIF by absolute URL, so neither demo asset needs to ship.
+demo.gif
 demo.mov
 
+# Build outputs / local state
+.dart_tool/
+build/
+coverage/
+pubspec.lock
+*.iml
+
+# Repo tooling and agent docs — not part of the package
+.github/
+AGENTS.md
+CLAUDE.md
+docs/
+tool/
+
+# Example: only lib/, pubspec.yaml and README ship
 example/android/
 example/ios/
 example/macos/
@@ -10,3 +29,4 @@ example/build/
 example/.dart_tool/
 example/pubspec.lock
 example/*.iml
+example/integration_test/

@@ -10,9 +10,7 @@ const _ink = Color(0xFF111111);
 const _muted = Color(0xFFEFEAE0);
 const _coral = Color(0xFFD97757);
 
-const _shadowSm = <BoxShadow>[
-  BoxShadow(color: Color(0x0A141413), offset: Offset(0, 1), blurRadius: 2),
-];
+const _shadowSm = <BoxShadow>[BoxShadow(color: Color(0x0A141413), offset: Offset(0, 1), blurRadius: 2)];
 
 class _DemoApp extends StatelessWidget {
   const _DemoApp();
@@ -51,20 +49,12 @@ class _HomePage extends StatelessWidget {
                 const SizedBox(height: 48),
                 const Text(
                   'morph_route',
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    color: _ink,
-                    letterSpacing: -1,
-                  ),
+                  style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, color: _ink, letterSpacing: -1),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Tap the active tile to see the morph in flight.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _ink.withValues(alpha: 0.6),
-                  ),
+                  style: TextStyle(fontSize: 14, color: _ink.withValues(alpha: 0.6)),
                 ),
                 const SizedBox(height: 40),
                 Expanded(
@@ -101,9 +91,7 @@ class _MorphingTile extends StatelessWidget {
       closedColor: Colors.white,
       openColor: _cream,
       middleColor: _cream,
-      closedShape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
+      closedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
       openShape: const RoundedRectangleBorder(),
       closedShadows: _shadowSm,
       // The premium bits.
@@ -122,11 +110,7 @@ class _MorphingTile extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               'Send',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: _ink,
-              ),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _ink),
             ),
           ],
         ),
@@ -151,11 +135,7 @@ class _StaticTile extends StatelessWidget {
       child: Center(
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: _ink.withValues(alpha: 0.4),
-          ),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _ink.withValues(alpha: 0.4)),
         ),
       ),
     );
@@ -186,11 +166,7 @@ class _DestinationScreen extends StatelessWidget {
                   const Spacer(),
                   const Text(
                     'Send',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: _ink,
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: _ink),
                   ),
                   const Spacer(),
                   const SizedBox(width: 48),
@@ -204,11 +180,7 @@ class _DestinationScreen extends StatelessWidget {
                   child: Text(
                     'This is where your real flow goes.\n\nTap the X to morph back.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _ink,
-                      height: 1.5,
-                    ),
+                    style: TextStyle(fontSize: 16, color: _ink, height: 1.5),
                   ),
                 ),
               ),

@@ -50,9 +50,7 @@ class MorphTile<T extends Object?> extends StatefulWidget {
     this.closedColor = const Color(0xFFFFFFFF),
     this.openColor = const Color(0xFFFFFFFF),
     this.middleColor,
-    this.closedShape = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(4.0)),
-    ),
+    this.closedShape = const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4.0))),
     this.openShape = const RoundedRectangleBorder(),
     this.closedShadows,
     this.openShadows,

@@ -72,16 +72,9 @@ class MorphRecede extends StatelessWidget {
       builder: (context, raw, child) {
         final t = curve.transform(raw.clamp(0.0, 1.0));
         final scale = 1.0 - (1.0 - scaleFloor) * t;
-        Widget result = Transform.scale(
-          scale: scale,
-          alignment: alignment,
-          child: child,
-        );
+        Widget result = Transform.scale(scale: scale, alignment: alignment, child: child);
         if (translateOffset != Offset.zero) {
-          result = Transform.translate(
-            offset: translateOffset * t,
-            child: result,
-          );
+          result = Transform.translate(offset: translateOffset * t, child: result);
         }
         return result;
       },
