@@ -22,14 +22,15 @@ version/metadata are therefore a release path, not ordinary source — see
 
 ## Commands (the real ones)
 
-There is **no CI workflow, no Makefile, and no script runner** in this repo. These are
+CI is `.github/workflows/ci.yml` (format, analyze, example analyze, test, publish
+dry-run on every PR and on `main`). There is no Makefile and no script runner. These are
 the actual toolchain commands, confirmed to run here:
 
 | Purpose | Command |
 |---|---|
 | Static analysis | `flutter analyze` |
 | Format check | `dart format --output=none --set-exit-if-changed .` |
-| Format (write) | `dart format .` |
+| Format (write) | `dart format .` (120 columns, set by `formatter.page_width` in both `analysis_options.yaml` files) |
 | Tests | `flutter test` |
 | Demo app analysis | `flutter analyze` from `example/` |
 | Release dry-run | `flutter pub publish --dry-run` |
@@ -40,11 +41,8 @@ the completion gate reads.
 
 ## Test layout
 
-**This repo currently has no tests.** There is no top-level `test/` directory, and
-`example/test/` is an empty directory. `flutter test` therefore has nothing to run; the
-verifier reports the test check as `skipped` with a reason, never as `passed`. New tests
-go in `test/`, mirroring `lib/src/` (`test/src/<name>_test.dart`) — the Dart convention,
-since this repo has established none of its own.
+Widget tests live in `test/`, mirroring `lib/src/` (`test/src/<name>_test.dart`).
+`example/test/` is empty.
 
 ## Architecture conventions
 
