@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.3
 
 - Package archive shrinks from ~2 MB to ~18 KB: `demo.gif`/`demo.mov` (the README
   already embeds the GIF by URL) and repo tooling (`AGENTS.md`, `CLAUDE.md`, `docs/`,
@@ -26,6 +26,11 @@
   cross-fade instead of morphing, and 3D tilt, `MorphRecede` scale and the press scale
   are off. Scrim, blur, tint and durations are unchanged. No API change.
 - Source formatted at 120 columns (`formatter.page_width`), enforced in CI.
+- Example: four tiles that showcase every widget (`MorphTile` with tilt, `fadeThrough`,
+  `OpenContainer` with a return value, a route pushed on top of a morph), and a layout
+  that fits the largest accessibility text size and landscape.
+- CI: format, analyze, tests and publish dry-run on every PR, plus the example's
+  end-to-end suite on an iOS simulator.
 
 ## 0.1.2
 

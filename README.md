@@ -20,6 +20,7 @@ What you get out of the box:
 - 🎨 **Accent scrim** — a low-alpha brand color washed over the host UI for warmth.
 - 🎲 **iOS 26-style 3D tilt** that peaks at the morph's midpoint and resolves flat on both ends.
 - 📦 **Scaffold-level recede** so the host UI scales down in lock-step with the morph.
+- ♿ **Reduce Motion aware** — falls back to a cross-fade when the user asks for less motion.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/LiquidatorCoder/morph_route/main/demo.gif" alt="morph_route demo" width="320" />
@@ -29,7 +30,7 @@ What you get out of the box:
 
 ```yaml
 dependencies:
-  morph_route: ^0.1.2
+  morph_route: ^0.1.3
 ```
 
 Or `flutter pub add morph_route`.
@@ -107,9 +108,11 @@ On `MorphRecede`:
 - `curve` — applied to the raw progress before scaling. Default `Curves.ease` (gentle, symmetric on close). Aggressive ease-out feels "snappy" on close.
 - `progress` — override the source notifier. Defaults to `OpenContainer.activeProgress`.
 
-## Accessibility
+## ♿ Accessibility
 
 `morph_route` respects Reduce Motion (iOS: `AccessibilityFeatures.reduceMotion`, from Settings → Accessibility → Motion; Android "Remove animations": `MediaQuery.disableAnimations`). When it is on, `OpenContainer` / `MorphTile` swap the morph for a cross-fade, and 3D tilt, `MorphRecede` scale and the `MorphTile` press scale are disabled. The scrim, blur and press tint are kept. The setting is read when a route is pushed or popped.
+
+`MorphTile` is exposed to screen readers (VoiceOver / TalkBack) as a button.
 
 ## ⚠️ Caveats
 
