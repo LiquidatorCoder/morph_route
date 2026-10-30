@@ -72,6 +72,4 @@ instead of going permanently stale against a differently-scoped default diff.
 
 Optional here, and required only for the release path (`pubspec.yaml`,
 `lib/morph_route.dart`, `LICENSE`) — see `review:` in `.claude/docs/routing.yaml`.
-`tool/harness/review` drives it. If the Codex CLI is unavailable or not authenticated,
-it writes an `incomplete` review artifact with the reason; it never writes a passing
-one it did not obtain.
+`tool/harness/review` drives it. Independent review is performed by the reviewer configured in the active global harness policy (`~/.claude/harness/current/policies/global.md`); this repo only sets risk floors.
